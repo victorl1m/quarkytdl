@@ -28,58 +28,37 @@ function Home() {
       .then((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        const filename = `${videoTitle}_${Date.now()}.mp3`;
         a.href = url;
-        a.download = filename;
+        a.download = videoTitle;
         a.click();
       })
       .catch((error) => {
         console.error("Error:", error);
       });
-
-    fetch(
-      "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/videoInfo",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ videoUrl }),
-      }
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setVideoTitle(data.videoTitle);
-        const filename = `${data.videoTitle}.mp4`;
-        fetch(
-          "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/rename",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ filename }),
-          }
-        )
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            console.log(`Renamed to ${data.videoTitle}`);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
   };
+
+  fetch(
+    "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/getVideoTitle",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ videoUrl }),
+    }
+  )
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      setVideoTitle(data.title);
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
 
   return (
     <div>
