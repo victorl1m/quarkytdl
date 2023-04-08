@@ -11,14 +11,14 @@ app.post('/download', async (req, res) => {
   try {
     const { videoUrl } = req.body;
     const info = await ytdl.getInfo(videoUrl);
-    const format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioonly' });
+    const format = ytdl.chooseFormat(info.formats, { quality: 'highest' });
     const stream = ytdl.downloadFromInfo(info, { format });
     const videoTitle = info.videoDetails.title.replace(/[^\w\s]/gi, '');
-    const filename = `${videoTitle}.mp3`;
+    const filename = `${videoTitle}.mp4`;
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Type', 'video/mp4');
     console.log(`Downloading ${videoTitle}`);
-    stream.pipe(res);
+    res.status(200).send({ stream, videoTitle });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('An error occurred while processing your request.');

@@ -10,23 +10,25 @@ function Home() {
   console.log(videoUrl);
 
   const handleSubmit = () => {
-    fetch("http://localhost:3000/download", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ videoUrl }),
-    })
+    fetch(
+      "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/download",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ videoUrl }),
+      }
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.blob();
+        return response.json();
       })
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
+      .then(({ stream, videoTitle }) => {
+        const url = URL.createObjectURL(stream);
         const a = document.createElement("a");
-        const videoTitle = blob.type.split("/")[0];
         const filename = `${videoTitle}_${Date.now()}.mp3`;
         a.href = url;
         a.download = filename;
