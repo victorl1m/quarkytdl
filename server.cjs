@@ -25,6 +25,18 @@ app.post('/download', async (req, res) => {
   }
 });
 
+app.post('/videoInfo', async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    const info = await ytdl.getInfo(videoUrl);
+    const videoTitle = info.videoDetails.title;
+    res.status(200).json({ videoTitle });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred while processing your request.');
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
