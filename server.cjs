@@ -18,7 +18,7 @@ app.post('/download', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'video/mp4');
     console.log(`Downloading ${videoTitle}`);
-    res.status(200).send({ stream, videoTitle });
+    res.status(200).json({ stream, videoTitle });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('An error occurred while processing your request.');

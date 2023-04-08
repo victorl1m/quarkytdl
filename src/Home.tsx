@@ -2,12 +2,11 @@ import { useState } from "react";
 
 function Home() {
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
 
   const handleInputChange = (URL) => {
     setVideoUrl(URL);
   };
-
-  console.log(videoUrl);
 
   const handleSubmit = () => {
     fetch(
@@ -24,15 +23,58 @@ function Home() {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        return response.blob();
       })
-      .then(({ stream, videoTitle }) => {
-        const url = URL.createObjectURL(stream);
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         const filename = `${videoTitle}_${Date.now()}.mp3`;
         a.href = url;
         a.download = filename;
         a.click();
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+
+    fetch(
+      "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/videoInfo",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ videoUrl }),
+      }
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setVideoTitle(data.videoTitle);
+        const filename = `${data.videoTitle}.mp4`;
+        fetch(
+          "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/rename",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ filename }),
+          }
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            console.log(`Renamed to ${data.videoTitle}`);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -66,6 +108,7 @@ function Home() {
           Download Video
         </button>
       </form>
+      {videoTitle && <p>Video Title: {videoTitle}</p>}
     </div>
   );
 }
