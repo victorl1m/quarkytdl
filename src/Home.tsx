@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./Home.css";
 
 function Home() {
   const [videoUrl, setVideoUrl] = useState("");
@@ -8,86 +9,54 @@ function Home() {
     setVideoUrl(URL);
   };
 
-  const handleSubmit = () => {
-    fetch(
-      "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/download",
-      {
+  const handleSubmit = async () => {
+    try {
+      const titleResponse = await fetch(
+        `http://localhost:3000/video-title?videoUrl=${videoUrl}`
+      );
+      const { videoTitle } = await titleResponse.json();
+      const downloadResponse = await fetch("http://localhost:3000/download", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ videoUrl }),
-      }
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.blob();
-      })
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = videoTitle;
-        a.click();
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+        body: JSON.stringify({ videoUrl, videoTitle }),
       });
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = videoTitle + ".mp4";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
-  fetch(
-    "http://ec2-15-228-232-151.sa-east-1.compute.amazonaws.com:3000/getVideoTitle",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ videoUrl }),
-    }
-  )
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      setVideoTitle(data.title);
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-
   return (
-    <div>
+    <div className="action-container">
+      {!videoTitle && <p className="title-text">be happy :)</p>}
+      {videoTitle && <p className="title-text">{videoTitle}</p>}
       <form
         onSubmit={(event) => {
           event.preventDefault();
           handleSubmit();
         }}
       >
-        <label>
-          Video URL:
-          <input
-            type="text"
-            value={videoUrl}
-            onChange={(event) => {
-              handleInputChange(event.target.value);
-            }}
-          />
-        </label>
-        <button
-          onClick={() => {
-            console.log("clicked");
+        <input
+          className="url-input"
+          type="text"
+          placeholder="URL"
+          value={videoUrl}
+          onChange={(event) => {
+            handleInputChange(event.target.value);
           }}
-          type="submit"
-        >
+        />
+        <button className="download-button" type="submit">
           Download Video
         </button>
       </form>
-      {videoTitle && <p>Video Title: {videoTitle}</p>}
     </div>
   );
 }
